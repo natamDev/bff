@@ -94,10 +94,11 @@ async function create() {
     res.value = r;
     const url = new URL(r.hostLink);
     let pathSegments = url.hash.startsWith("#") ? url.hash.slice(1).split("/") : url.pathname.split("/");
+    const hashParams = new URLSearchParams(url.hash.slice(1).split("?")[1]);
 
     if (pathSegments.length > 2) {
       const eventId = pathSegments[2];
-      const sig = url.searchParams.get("sig") || "";
+      const sig = hashParams.get("sig") || "";
       router.push({path: `/host/${eventId}`, query: {sig}});
     } else {
       throw new Error("L'URL générée est invalide : " + r.hostLink);
