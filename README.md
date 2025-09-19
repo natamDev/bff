@@ -1,57 +1,27 @@
-# Bets App (Frontend + Backend)
+# Bets App — Local Dev (Simple)
 
-Monorepo minimal pour ton MVP **paris entre amis** (liens invités uniques, host admin, paris VRAI/FAUX).
-- Frontend: **Vue 3 + TypeScript + Vite**
-- Backend: **Quarkus (RESTEasy Reactive) + Panache MongoDB**
+Stack: **MongoDB (Docker)** + **Quarkus** + **Vue 3 (Vite)**
 
-## Prérequis
-- Node 18+
-- Java 17+
-- Maven 3.9+
-- Docker (optionnel, pour MongoDB via docker-compose)
-
-## Lancer MongoDB (option 1) — Docker
+## Démarrage (Git Bash conseillé sous Windows)
 ```bash
-cd backend
-docker compose up -d
-# Mongo sera sur mongodb://localhost:27017
+# 1) Donner les droits d'exécution au script (une fois)
+chmod +x run-local.sh
+
+# 2) Lancer tout (Mongo + Backend + Front en hot reload)
+./run-local.sh
+
+# Frontend : http://localhost:5173
+# Backend  : http://localhost:8080  (Swagger: /q/swagger-ui)
+# Mongo    : mongodb://localhost:27017
 ```
+### Prérequis
+- Docker installé (`docker ps` doit fonctionner).
+- Java 21 (OpenJDK).
+- Node 18+.
 
-## Lancer le backend (Quarkus)
-```bash
-cd backend
-./mvnw quarkus:dev
-# API sur http://localhost:8080
-# Swagger UI: http://localhost:8080/q/swagger-ui
+## Structure
 ```
-
-## Lancer le frontend (Vue)
-```bash
-cd frontend
-npm i
-npm run dev
-# Front sur http://localhost:5173
-```
-
-## Variables
-- `backend/src/main/resources/application.properties` définit la connexion Mongo et le secret HMAC.
-- `frontend/.env` contient `VITE_API_BASE` (par défaut `http://localhost:8080`).
-
-## Endpoints clés (rappel)
-- `POST /events` → crée un event + liens host/invités
-- `GET /events/{eventId}` → vue publique
-- `GET /events/{eventId}/as-invite?inviteId=...&sig=...` → vue centrée invité
-- `POST /events/{eventId}/bets?sig=HOST_SIG` → ajouter un pari (host)
-- `PATCH /events/{eventId}/bets/{betId}?sig=HOST_SIG` → statut `open|true|false` (host)
-- `POST /events/{eventId}/bets/{betId}/predict?inviteId=...&sig=...` → pronostic invité `YES|NO`
-- `GET /events/{eventId}/invites/links?sig=HOST_SIG` → lister tous les liens invités (host)
-- `GET /events/{eventId}/predictions/matrix?sig=HOST_SIG` → matrix pronostics (host)
-
-
-## Démarrage one-liner (scripts à la racine)
-```bash
-# installe la dépendance 'concurrently' pour le script dev:all
-npm i
-npm run dev:all
-# => lance Mongo (Docker), backend Quarkus et frontend Vue en parallèle
+backend/   # Quarkus + Panache Mongo (API)
+frontend/  # Vue 3 + Vite (UI)
+run-local.sh
 ```

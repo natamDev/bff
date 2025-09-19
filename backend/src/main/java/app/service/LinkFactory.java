@@ -20,7 +20,6 @@ interface AppConfig {
 @ApplicationScoped
 public class LinkFactory {
   @Inject AppConfig cfg;
-
   private String hmac(String payload){
     try {
       Mac mac = Mac.getInstance("HmacSHA256");
@@ -28,21 +27,14 @@ public class LinkFactory {
       return Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
     } catch (Exception e){ throw new RuntimeException(e); }
   }
-
   public String hostLink(Event e){
     String sig = hmac(e.id.toHexString() + "|" + e.hostSecret);
     return cfg.baseUrl()+"/#/host/" + e.id.toHexString() + "?sig=" + sig;
   }
-
   public String inviteLink(Event e, String inviteId){
     String sig = hmac(e.id.toHexString() + "|" + inviteId);
     return cfg.baseUrl()+"/#/invite/" + e.id.toHexString() + "/" + inviteId + "?sig=" + sig;
   }
-
-  public boolean verifyHost(String eventId, String sig, String hostSecret){
-    return hmac(eventId + "|" + hostSecret).equals(sig);
-  }
-  public boolean verifyInvite(String eventId, String sig, String inviteId){
-    return hmac(eventId + "|" + inviteId).equals(sig);
-  }
+  public boolean verifyHost(String eventId, String sig, String hostSecret){ return hmac(eventId + "|" + hostSecret).equals(sig); }
+  public boolean verifyInvite(String eventId, String sig, String inviteId){ return hmac(eventId + "|" + inviteId).equals(sig); }
 }

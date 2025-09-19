@@ -12,15 +12,7 @@ public class EventCreateReq {
   public OffsetDateTime endAt;
   public List<String> invites;
 }
-
-public class EventCreatedRes {
-  public String eventId;
-  public String hostLink;
-  public Map<String,String> inviteLinks;
-}
-
+public class EventCreatedRes { public String eventId; public String hostLink; public Map<String,String> inviteLinks; }
 public class BetCreateReq { public String text; }
-
 public class BetUpdateReq { public String status; }
-
 public class BetPredictionReq { public String choice; }
