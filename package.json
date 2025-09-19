@@ -1,0 +1,14 @@
+{
+  "name": "bets-app",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:docker": "docker compose -f backend/docker-compose.yml up -d",
+    "dev:back": "mvn -f backend/pom.xml quarkus:dev",
+    "dev:front": "npm --prefix frontend run dev",
+    "dev:all": "npm run dev:docker && concurrently -n BACK,FRONT -c green,cyan \"mvn -f backend/pom.xml quarkus:dev\" \"npm --prefix frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

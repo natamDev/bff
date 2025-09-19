@@ -46,3 +46,12 @@ npm run dev
 - `POST /events/{eventId}/bets/{betId}/predict?inviteId=...&sig=...` → pronostic invité `YES|NO`
 - `GET /events/{eventId}/invites/links?sig=HOST_SIG` → lister tous les liens invités (host)
 - `GET /events/{eventId}/predictions/matrix?sig=HOST_SIG` → matrix pronostics (host)
+
+
+## Démarrage one-liner (scripts à la racine)
+```bash
+# installe la dépendance 'concurrently' pour le script dev:all
+npm i
+npm run dev:all
+# => lance Mongo (Docker), backend Quarkus et frontend Vue en parallèle
+```
