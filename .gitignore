@@ -1,0 +1,8 @@
+node_modules
+dist
+target
+.DS_Store
+.mvn
+.mvnw
+.mvnw.cmd
+frontend/.vite

@@ -1,0 +1,269 @@
+package app.api;
+
+import app.api.dto.*;
+import app.domain.Event;
+import app.repo.EventRepository;
+import app.service.IdGen;
+import app.service.LinkFactory;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.bson.types.ObjectId;
+
+import java.time.OffsetDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Path("/events")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class EventResource {
+
+  @Inject EventRepository repo;
+  @Inject LinkFactory links;
+
+  @POST
+  @Transactional
+  public Response create(EventCreateReq req){
+    if(req.title==null || req.title.isBlank()) throw new BadRequestException("title required");
+    Event e = new Event();
+    e.id = new ObjectId();
+    e.title = req.title;
+    e.description = req.description;
+    e.place = req.place;
+    e.startAt = req.startAt;
+    e.endAt = req.endAt;
+    e.hostSecret = IdGen.secret();
+
+    if(req.invites!=null){
+      for(String name: req.invites){
+        Event.Invite inv = new Event.Invite();
+        inv.id = IdGen.shortId();
+        inv.name = name;
+        inv.revoked = false;
+        e.invites.add(inv);
+      }
+    }
+    repo.persist(e);
+
+    Map<String,String> inviteLinks = e.invites.stream()
+      .collect(Collectors.toMap(i -> i.name, i -> links.inviteLink(e, i.id)));
+
+    EventCreatedRes res = new EventCreatedRes();
+    res.eventId = e.id.toHexString();
+    res.hostLink = links.hostLink(e);
+    res.inviteLinks = inviteLinks;
+
+    return Response.ok(res).build();
+  }
+
+  // Vue publique
+  @GET @Path("/{eventId}")
+  public EventView get(@PathParam("eventId") String eventId) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    return EventView.of(e);
+  }
+
+  // Vue centrée invité (masque les autres pronos)
+  @GET @Path("/{eventId}/as-invite")
+  public InviteEventView getAsInvite(@PathParam("eventId") String eventId,
+                                     @QueryParam("inviteId") String inviteId,
+                                     @QueryParam("sig") String sig) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyInvite(eventId, sig, inviteId)) throw new ForbiddenException();
+    return InviteEventView.of(e, inviteId);
+  }
+
+  // Ajouter un pari (host)
+  @POST @Path("/{eventId}/bets")
+  @Transactional
+  public EventView addBet(@PathParam("eventId") String eventId,
+                          @QueryParam("sig") String sig,
+                          BetCreateReq req) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+    if(req.text==null || req.text.isBlank()) throw new BadRequestException("text required");
+
+    Event.Bet b = new Event.Bet();
+    b.id = IdGen.shortId();
+    b.text = req.text;
+    e.bets.add(b);
+    repo.update(e);
+    return EventView.of(e);
+  }
+
+  // Modifier statut pari (host)
+  @PATCH @Path("/{eventId}/bets/{betId}")
+  @Transactional
+  public EventView setBetStatus(@PathParam("eventId") String eventId,
+                                @PathParam("betId") String betId,
+                                @QueryParam("sig") String sig,
+                                BetUpdateReq req) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+    Optional<Event.Bet> bet = e.bets.stream().filter(b -> b.id.equals(betId)).findFirst();
+    if(bet.isEmpty()) throw new NotFoundException("bet not found");
+
+    switch (req.status) {
+      case "open" -> bet.get().status = Event.Bet.Status.open;
+      case "true" -> bet.get().status = Event.Bet.Status._true;
+      case "false" -> bet.get().status = Event.Bet.Status._false;
+      default -> throw new BadRequestException("status invalid");
+    }
+    repo.update(e);
+    return EventView.of(e);
+  }
+
+  // Invité pronostique YES/NO
+  @POST @Path("/{eventId}/bets/{betId}/predict")
+  @Transactional
+  public EventView predict(@PathParam("eventId") String eventId,
+                           @PathParam("betId") String betId,
+                           @QueryParam("inviteId") String inviteId,
+                           @QueryParam("sig") String sig,
+                           BetPredictionReq req) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyInvite(eventId, sig, inviteId)) throw new ForbiddenException();
+
+    var betOpt = e.bets.stream().filter(b -> b.id.equals(betId)).findFirst();
+    if(betOpt.isEmpty()) throw new NotFoundException("bet not found");
+    var bet = betOpt.get();
+    if (bet.status != Event.Bet.Status.open) throw new BadRequestException("bet closed");
+
+    Event.Prediction.Choice choice = switch (req.choice) {
+      case "YES" -> Event.Prediction.Choice.YES;
+      case "NO" -> Event.Prediction.Choice.NO;
+      default -> throw new BadRequestException("choice must be YES or NO");
+    };
+
+    var existing = bet.predictions.stream().filter(p -> p.inviteId.equals(inviteId)).findFirst();
+    if(existing.isPresent()){
+      existing.get().choice = choice;
+      existing.get().at = OffsetDateTime.now();
+    } else {
+      Event.Prediction p = new Event.Prediction();
+      p.inviteId = inviteId; p.choice = choice; p.at = OffsetDateTime.now();
+      bet.predictions.add(p);
+    }
+    repo.update(e);
+    return EventView.of(e);
+  }
+
+  // Lister tous les liens invités (host)
+  @GET @Path("/{eventId}/invites/links")
+  public Map<String,String> listInviteLinks(@PathParam("eventId") String eventId,
+                                            @QueryParam("sig") String sig) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+    return e.invites.stream().filter(i -> !i.revoked)
+      .collect(Collectors.toMap(i -> i.name, i -> links.inviteLink(e, i.id)));
+  }
+
+  // Matrix (host)
+  @GET @Path("/{eventId}/predictions/matrix")
+  public List<MatrixRow> matrix(@PathParam("eventId") String eventId,
+                                @QueryParam("sig") String sig) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+    Map<String,String> names = e.invites.stream().collect(Collectors.toMap(i -> i.id, i -> i.name));
+    List<MatrixRow> rows = new ArrayList<>();
+    for(Event.Bet b : e.bets){
+      MatrixRow r = new MatrixRow();
+      r.betId = b.id; r.text = b.text;
+      r.status = switch (b.status){ case open -> "open"; case _true -> "true"; case _false -> "false"; };
+      r.answers = new LinkedHashMap<>();
+      for(Event.Prediction p : b.predictions){
+        String name = names.getOrDefault(p.inviteId, p.inviteId);
+        r.answers.put(name, p.choice.name());
+      }
+      rows.add(r);
+    }
+    return rows;
+  }
+
+  // Fermer l'event (host)
+  @POST @Path("/{eventId}/close")
+  @Transactional
+  public EventView close(@PathParam("eventId") String eventId,
+                         @QueryParam("sig") String sig) {
+    Event e = repo.byId(new ObjectId(eventId));
+    if(e==null) throw new NotFoundException();
+    if(!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+    e.closed = true;
+    repo.update(e);
+    return EventView.of(e);
+  }
+
+  // --- Vues (projections) ---
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class EventView {
+    public String id, title, description, place;
+    public String startAt, endAt;
+    public boolean closed;
+    public List<BetView> bets;
+
+    static EventView of(Event e){
+      EventView v = new EventView();
+      v.id = e.id.toHexString();
+      v.title = e.title; v.description = e.description; v.place = e.place;
+      v.startAt = e.startAt!=null? e.startAt.toString(): null;
+      v.endAt   = e.endAt  !=null? e.endAt.toString(): null;
+      v.closed = e.closed;
+      v.bets = e.bets.stream().map(BetView::of).toList();
+      return v;
+    }
+  }
+  public static class BetView {
+    public String id, text, status;
+    static BetView of(Event.Bet b){
+      BetView v = new BetView();
+      v.id = b.id; v.text = b.text;
+      v.status = switch (b.status){ case open -> "open"; case _true -> "true"; case _false -> "false"; };
+      return v;
+    }
+  }
+
+  public static class InviteEventView {
+    public String id, title, description, place, startAt, endAt;
+    public boolean closed;
+    public List<InviteBetRow> bets;
+
+    static InviteEventView of(Event e, String inviteId){
+      InviteEventView v = new InviteEventView();
+      v.id = e.id.toHexString(); v.title = e.title; v.description = e.description; v.place = e.place;
+      v.startAt = e.startAt!=null? e.startAt.toString(): null;
+      v.endAt   = e.endAt  !=null? e.endAt.toString(): null;
+      v.closed = e.closed;
+      v.bets = e.bets.stream().map(b -> {
+        InviteBetRow r = new InviteBetRow();
+        r.id = b.id; r.text = b.text;
+        r.status = switch (b.status){ case open -> "open"; case _true -> "true"; case _false -> "false"; };
+        r.myChoice = b.predictions.stream().filter(p -> p.inviteId.equals(inviteId)).map(p -> p.choice.name()).findFirst().orElse(null);
+        return r;
+      }).toList();
+      return v;
+    }
+  }
+  public static class InviteBetRow {
+    public String id, text, status, myChoice;
+  }
+
+  public static class MatrixRow {
+    public String betId;
+    public String text;
+    public String status;
+    public Map<String,String> answers;
+  }
+}
