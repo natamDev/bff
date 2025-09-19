@@ -51,6 +51,11 @@ public class EventResource {
     public Response create(EventCreateReq req) {
         Log.info("Create event");
         if (req.title == null || req.title.isBlank()) throw new BadRequestException("title required");
+        if (req.startAt == null || req.endAt == null)
+            throw new BadRequestException("startAt and endAt must be provided");
+
+        Log.infof("startAt: %s, endAt: %s", req.startAt, req.endAt);
+
         Event e = new Event();
         e.id = new ObjectId();
         e.title = req.title;

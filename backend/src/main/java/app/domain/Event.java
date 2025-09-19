@@ -24,6 +24,26 @@ public class Event {
     public List<Invite> invites = new ArrayList<>();
     public List<Bet> bets = new ArrayList<>();
 
+    @BsonProperty("startAt")
+    public String getStartAt() {
+        return startAt != null ? startAt.toString() : null;
+    }
+
+    @BsonProperty("startAt")
+    public void setStartAt(String startAt) {
+        this.startAt = startAt != null ? OffsetDateTime.parse(startAt) : null;
+    }
+
+    @BsonProperty("endAt")
+    public String getEndAt() {
+        return endAt != null ? endAt.toString() : null;
+    }
+
+    @BsonProperty("endAt")
+    public void setEndAt(String endAt) {
+        this.endAt = endAt != null ? OffsetDateTime.parse(endAt) : null;
+    }
+
     public static class Invite {
         public String id;
         public String name;
