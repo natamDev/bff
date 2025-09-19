@@ -62,8 +62,19 @@ public class Event {
     public static class Prediction {
         public String inviteId;
         public Choice choice;
+        @BsonProperty("at")
         public OffsetDateTime at;
 
         public enum Choice {YES, NO}
+
+         @BsonProperty("at")
+        public String getAt() {
+            return at != null ? at.toString() : null;
+        }
+
+        @BsonProperty("at")
+        public void setAt(String at) {
+            this.at = at != null ? OffsetDateTime.parse(at) : null;
+        }
     }
 }
