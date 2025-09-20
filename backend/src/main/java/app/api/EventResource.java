@@ -215,6 +215,18 @@ public class EventResource {
         return EventView.of(e);
     }
 
+    @POST
+    @Path("/{eventId}/open")
+    @Transactional
+    public EventView open(@PathParam("eventId") String eventId, @QueryParam("sig") String sig) {
+        Event e = repo.byId(new ObjectId(eventId));
+        if (e == null) throw new NotFoundException();
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+        e.closed = false;
+        repo.update(e);
+        return EventView.of(e);
+    }
+
     // Views
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class EventView {
