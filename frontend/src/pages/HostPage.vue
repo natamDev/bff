@@ -12,7 +12,14 @@
       </div>
     </div>
     <p class="muted">{{ event.description }}</p>
-
+    <ul
+      class="muted"
+      style="margin: 8px 0 16px; padding-left: 16px; line-height: 1.4"
+    >
+      <li><b>Lieu :</b> {{ event.place }}</li>
+      <li><b>Début :</b> {{ new Date(event.startAt).toLocaleString() }}</li>
+      <li><b>Fin :</b> {{ new Date(event.endAt).toLocaleString() }}</li>
+    </ul>
     <div class="sep"></div>
     <div class="row">
       <div class="col">
@@ -49,13 +56,28 @@
               <b>{{ b.text }}</b>
             </div>
             <div class="muted">
-              Statut: <span class="pill">{{ b.status }}</span>
+              Statut: <span class="pill">{{ statusLabel(b.status) }}</span>
             </div>
           </div>
           <div class="row">
-            <button class="ghost" @click="setStatus(b, 'open')">Ouvrir</button>
-            <button class="ghost" @click="setStatus(b, 'true')">Vrai</button>
-            <button class="ghost" @click="setStatus(b, 'false')">Faux</button>
+            <button
+              :class="{ ghost: b.status !== 'open' }"
+              @click="setStatus(b, 'open')"
+            >
+              {{ b.status === "open" ? "Ouvert" : "Ouvrir" }}
+            </button>
+            <button
+              :class="{ ghost: b.status !== 'true' }"
+              @click="setStatus(b, 'true')"
+            >
+              Oui
+            </button>
+            <button
+              :class="{ ghost: b.status !== 'false' }"
+              @click="setStatus(b, 'false')"
+            >
+              Non
+            </button>
           </div>
         </div>
       </div>
@@ -83,7 +105,8 @@
           style="padding: 12px"
         >
           <div style="margin-bottom: 6px">
-            <b>{{ r.text }}</b> — <span class="pill">{{ r.status }}</span>
+            <b>{{ r.text }}</b> —
+            <span class="pill">{{ statusLabel(r.status) }}</span>
           </div>
           <div class="list">
             <div
@@ -92,7 +115,8 @@
               style="display: flex; justify-content: space-between"
             >
               <div>{{ name }}</div>
-              <div>{{ choice }}</div>
+              <div>{{ choiceLabel(choice) }}</div>
+              <div>{{ resultLabel(choice, r, event) }}</div>
             </div>
           </div>
         </div>
@@ -177,5 +201,46 @@ async function openEvent() {
   }
 }
 
+function statusLabel(status: string) {
+  switch (status) {
+    case "open":
+      return "pari ouvert";
+    case "true":
+      return "pari validé : Oui";
+    case "false":
+      return "pari validé : Non";
+    default:
+      return status;
+  }
+}
+
+function resultLabel(choice: any, b: any, event: any) {
+  // si pari pas encore résolu
+  if (b.status === "open") {
+    return "⏳ En attente de résultat";
+  }
+
+  // si aucun choix fait par l'invité
+  if (!choice) {
+    return event.closed || b.status !== "open" ? "❌ Perdu" : "—";
+  }
+
+  // gagné si choix correspond au résultat
+  if (
+    (choice === "YES" && b.status === "true") ||
+    (choice === "NO" && b.status === "false")
+  ) {
+    return "✅ Gagné";
+  }
+
+  // sinon perdu
+  return "❌ Perdu";
+}
+
+function choiceLabel(choice: string) {
+  if (choice === "YES") return "Oui";
+  if (choice === "NO") return "Non";
+  return choice;
+}
 onMounted(refresh);
 </script>

@@ -148,8 +148,8 @@ public class EventResource {
         var bet = e.bets.stream().filter(b -> b.id.equals(betId)).findFirst().orElseThrow(() -> new NotFoundException("bet not found"));
         if (bet.status != Event.Bet.Status.open) throw new BadRequestException("bet closed");
         var choice = switch (req.choice) {
-            case "YES" -> Event.Prediction.Choice.YES;
-            case "NO" -> Event.Prediction.Choice.NO;
+            case "Oui" -> Event.Prediction.Choice.YES;
+            case "Non" -> Event.Prediction.Choice.NO;
             default -> throw new BadRequestException("choice must be YES or NO");
         };
         var existing = bet.predictions.stream().filter(p -> p.inviteId.equals(inviteId)).findFirst();

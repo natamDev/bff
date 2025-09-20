@@ -15,11 +15,14 @@
       class="muted"
       style="margin: 12px 0; font-weight: 500; color: #22c55e"
     >
-      Événement ouvert — vous pouvez pronostiquer
+      Événement ouvert — vous pouvez pronostiquer <br />
     </div>
     <div class="sep"></div>
 
     <h3>Mes pronostics</h3>
+    <div v-if="!event.closed" class="muted">
+      Si un pari est fermé, le pronostic est vérouillé
+    </div>
     <div class="list" v-if="event.bets?.length">
       <div
         class="card"
@@ -48,20 +51,20 @@
             <button
               :class="[{ ghost: b.myChoice !== 'YES' }]"
               :disabled="event.closed || b.status !== 'open'"
-              @click="predict(b, 'YES')"
+              @click="predict(b, 'Oui')"
             >
               Oui
             </button>
             <button
               :class="[{ ghost: b.myChoice !== 'NO' }]"
               :disabled="event.closed || b.status !== 'open'"
-              @click="predict(b, 'NO')"
+              @click="predict(b, 'Non')"
             >
               Non
             </button>
           </div>
           <div class="row">
-            Résultat: <span>{{ resultLabel(b, event) }}</span>
+            <span>{{ resultLabel(b, event) }}</span>
           </div>
         </div>
       </div>
@@ -93,7 +96,7 @@ async function load() {
   }
 }
 
-async function predict(b: { id: string }, choice: "YES" | "NO") {
+async function predict(b: { id: string }, choice: "Oui" | "Non") {
   try {
     await EventApi.predict(eventId, b.id, inviteId, sig, choice);
     await load();
@@ -107,9 +110,9 @@ function statusLabel(status: string) {
     case "open":
       return "pari ouvert";
     case "true":
-      return "pari validé : vrai";
+      return "fermé, réponse : Oui";
     case "false":
-      return "pari validé : faux";
+      return "fermé, réponse : Non";
     default:
       return status;
   }
@@ -123,7 +126,7 @@ function resultLabel(b: any, event: any) {
 
   // si aucun choix fait par l'invité
   if (!b.myChoice) {
-    return event.closed ? "❌ Perdu" : "—";
+    return event.closed || b.status !== "open" ? "❌ Perdu" : "—";
   }
 
   // gagné si choix correspond au résultat
