@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+JAVA_EXE="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+[ -z "$JAVA_HOME" ] && JAVA_EXE="java"
+JAR="$WRAPPER_DIR/.mvn/wrapper/maven-wrapper.jar"
+PROPS="$WRAPPER_DIR/.mvn/wrapper/maven-wrapper.properties"
+if [ ! -f "$JAR" ]; then
+  mkdir -p "$WRAPPER_DIR/.mvn/wrapper"
+  URL="$(grep -E '^wrapperUrl=' "$PROPS" | sed -E 's/^wrapperUrl=//')"
+  echo "Downloading Maven Wrapper JAR from: $URL"
+  if command -v curl >/dev/null 2>&1; then curl -s -f -L -o "$JAR" "$URL"; elif command -v wget >/dev/null 2>&1; then wget -q -O "$JAR" "$URL"; else echo "Need curl or wget"; exit 1; fi
+fi
+exec "$JAVA_EXE" -classpath "$JAR" -Dmaven.multiModuleProjectDirectory="$WRAPPER_DIR" org.apache.maven.wrapper.MavenWrapperMain "$@"
