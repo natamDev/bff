@@ -21,6 +21,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -142,6 +143,32 @@ public class EventResource {
         return EventView.of(e);
     }
 
+    @DELETE
+    @Path("/{eventId}/bets/{betId}")
+    @Transactional
+    public EventView deleteBet(@PathParam("eventId") String eventId,
+                            @PathParam("betId") String betId,
+                            @QueryParam("sig") String sig) {
+        // Vérifier que l'event existe
+        ObjectId oid = new ObjectId(eventId);
+        Event e = repo.byId(oid);
+        if (e == null) throw new NotFoundException("event not found");
+
+        // Vérifier que c'est bien l'hôte
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+        // Supprimer le bet (et donc ses predictions)
+        boolean removed = e.bets.removeIf(b -> b.id.equals(betId));
+        if (!removed) throw new NotFoundException("bet not found");
+
+        // Sauvegarde de l'event modifié
+        repo.update(e);
+
+        // Retourne l'event mis à jour
+        return EventView.of(e);
+    }
+
+
     @POST
     @Path("/{eventId}/bets/{betId}/predict")
     @Transactional
@@ -174,11 +201,94 @@ public class EventResource {
 
     @GET
     @Path("/{eventId}/invites/links")
-    public Map<String, String> listInviteLinks(@PathParam("eventId") String eventId, @QueryParam("sig") String sig) {
+    public List<InviteLinkView> listInviteLinks(@PathParam("eventId") String eventId,
+                                                @QueryParam("sig") String sig) {
         Event e = repo.byId(new ObjectId(eventId));
         if (e == null) throw new NotFoundException();
         if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
-        return e.invites.stream().filter(i -> !i.revoked).collect(Collectors.toMap(i -> i.name, i -> links.inviteLink(e, i.id)));
+
+        return e.invites.stream()
+                .map(i -> {
+                    InviteLinkView v = new InviteLinkView();
+                    v.id = i.id;
+                    v.name = i.name;
+                    v.revoked = i.revoked;
+                    v.url = links.inviteLink(e, i.id); // lien seulement si pas révoqué
+                    return v;
+                })
+                .toList();
+    }
+
+    public static class InviteLinkView {
+        public String id;
+        public String name;
+        public boolean revoked;
+        public String url;
+    }
+
+    @POST
+    @Path("/{eventId}/invites")
+    @Transactional
+    public EventView addInvite(@PathParam("eventId") String eventId,
+                            @QueryParam("sig") String sig,
+                            Map<String, String> body) {
+        Event e = repo.byId(new ObjectId(eventId));
+        if (e == null) throw new NotFoundException();
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+        String name = body.get("name");
+        if (name == null || name.isBlank()) throw new BadRequestException("name required");
+
+        Event.Invite inv = new Event.Invite();
+        inv.id = IdGen.shortId();
+        inv.name = name;
+        inv.revoked = false;
+        e.invites.add(inv);
+
+        repo.update(e);
+        return EventView.of(e);
+    }
+
+    @PATCH
+    @Path("/{eventId}/invites/{inviteId}/revoke")
+    @Transactional
+    public EventView revokeInvite(@PathParam("eventId") String eventId,
+                                @PathParam("inviteId") String inviteId,
+                                @QueryParam("sig") String sig) {
+        Event e = repo.byId(new ObjectId(eventId));
+        if (e == null) throw new NotFoundException();
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+        Event.Invite inv = e.invites.stream()
+            .filter(i -> i.id.equals(inviteId))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("invite not found"));
+
+        inv.revoked = true;
+
+        repo.update(e);
+        return EventView.of(e);
+    }
+
+    @PATCH
+    @Path("/{eventId}/invites/{inviteId}/approve")
+    @Transactional
+    public EventView approveInvite(@PathParam("eventId") String eventId,
+                                @PathParam("inviteId") String inviteId,
+                                @QueryParam("sig") String sig) {
+        Event e = repo.byId(new ObjectId(eventId));
+        if (e == null) throw new NotFoundException();
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+        Event.Invite inv = e.invites.stream()
+            .filter(i -> i.id.equals(inviteId))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("invite not found"));
+
+        inv.revoked = false;
+
+        repo.update(e);
+        return EventView.of(e);
     }
 
     @GET
@@ -272,6 +382,7 @@ public class EventResource {
     public static class InviteEventView {
         public String id, title, description, place, startAt, endAt;
         public boolean closed;
+        public boolean revoked;
         public List<InviteBetRow> bets;
 
         static InviteEventView of(Event e, String inviteId) {
@@ -283,6 +394,11 @@ public class EventResource {
             v.startAt = e.startAt != null ? e.startAt.toString() : null;
             v.endAt = e.endAt != null ? e.endAt.toString() : null;
             v.closed = e.closed;
+            var invite = e.invites.stream()
+            .filter(i -> i.id.equals(inviteId))
+            .findFirst()
+            .orElse(null);
+            v.revoked = (invite != null && invite.revoked);
             v.bets = e.bets.stream().map(b -> {
                 InviteBetRow r = new InviteBetRow();
                 r.id = b.id;

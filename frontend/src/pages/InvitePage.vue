@@ -1,7 +1,19 @@
 <template>
   <div class="card" v-if="event">
     <h2 style="margin-top: 0">{{ event.title }}</h2>
+    <div
+      class="row"
+      style="align-items: center; justify-content: space-between"
+    >
+      <h2 style="margin: 0">Invité</h2>
+      <div class="row" style="gap: 8px">
+        <button class="ghost" @click="refresh">Rafraîchir</button>
+      </div>
+    </div>
+
     <p class="muted">{{ event.description }}</p>
+
+    <div class="sep"></div>
 
     <div
       v-if="event.closed"
@@ -17,59 +29,70 @@
     >
       Événement ouvert — vous pouvez pronostiquer <br />
     </div>
+    <span class="muted">
+      Si l'evenement est cloturé, tous les pronostics sont vérouillés
+    </span>
+
     <div class="sep"></div>
 
     <h3>Mes pronostics</h3>
-    <div v-if="!event.closed" class="muted">
-      Si un pari est fermé, le pronostic est vérouillé
-    </div>
-    <div class="list" v-if="event.bets?.length">
-      <div
-        class="card"
-        v-for="b in event.bets"
-        :key="b.id"
-        style="padding: 12px"
-      >
+    <!-- Si l’invité est actif -->
+    <div class="card" v-if="!event.revoked">
+      <div class="muted">Si un pari est fermé, le pronostic est verrouillé</div>
+      <div class="list" v-if="event.bets?.length">
         <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-          "
+          class="card"
+          v-for="b in event.bets"
+          :key="b.id"
+          style="padding: 12px"
         >
-          <div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 10px;
+            "
+          >
             <div>
-              <b>{{ b.text }}</b>
+              <div>
+                <b>{{ b.text }}</b>
+              </div>
+              <div class="muted">
+                Statut: <span class="pill">{{ statusLabel(b.status) }}</span>
+              </div>
             </div>
-            <div class="muted">
-              Statut: <span class="pill">{{ statusLabel(b.status) }}</span>
-            </div>
-          </div>
 
-          <div class="row">
-            <button
-              :class="[{ ghost: b.myChoice !== 'YES' }]"
-              :disabled="event.closed || b.status !== 'open'"
-              @click="predict(b, 'Oui')"
-            >
-              Oui
-            </button>
-            <button
-              :class="[{ ghost: b.myChoice !== 'NO' }]"
-              :disabled="event.closed || b.status !== 'open'"
-              @click="predict(b, 'Non')"
-            >
-              Non
-            </button>
-          </div>
-          <div class="row">
-            <span>{{ resultLabel(b, event) }}</span>
+            <div class="row">
+              <button
+                :class="[{ ghost: b.myChoice !== 'YES' }]"
+                :disabled="event.closed || b.status !== 'open'"
+                @click="predict(b, 'Oui')"
+              >
+                Oui
+              </button>
+              <button
+                :class="[{ ghost: b.myChoice !== 'NO' }]"
+                :disabled="event.closed || b.status !== 'open'"
+                @click="predict(b, 'Non')"
+              >
+                Non
+              </button>
+            </div>
+
+            <div class="row">
+              <span>{{ resultLabel(b, event) }}</span>
+            </div>
           </div>
         </div>
       </div>
+      <p v-else class="muted">Aucun pari pour l’instant.</p>
     </div>
-    <p v-else class="muted">Aucun pari pour l’instant.</p>
+
+    <!-- Si l’invité est révoqué -->
+    <div class="card" v-else style="color: #f87171; font-weight: 500">
+      ⚠️ Vous avez été révoqué et ne pouvez plus participer à cet événement.
+    </div>
 
     <p v-if="error" style="color: #fca5a5">{{ error }}</p>
   </div>
@@ -100,6 +123,14 @@ async function predict(b: { id: string }, choice: "Oui" | "Non") {
   try {
     await EventApi.predict(eventId, b.id, inviteId, sig, choice);
     await load();
+  } catch (e: any) {
+    error.value = e.message;
+  }
+}
+
+async function refresh() {
+  try {
+    event.value = await EventApi.getAsInvite(eventId, inviteId, sig);
   } catch (e: any) {
     error.value = e.message;
   }

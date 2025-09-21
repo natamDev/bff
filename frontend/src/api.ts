@@ -105,4 +105,34 @@ export const EventApi = {
       `/events/${eventId}/predictions/matrix?sig=${encodeURIComponent(sig)}`
     );
   },
+  deleteBet(eventId: string, betId: string, sig: string) {
+    return http(
+      `/events/${eventId}/bets/${betId}?sig=${encodeURIComponent(sig)}`,
+      { method: "DELETE" }
+    );
+  },
+  addInvite(eventId: string, sig: string, name: string) {
+    return http(`/events/${eventId}/invites?sig=${encodeURIComponent(sig)}`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  revokeInvite(eventId: string, inviteId: string, sig: string) {
+    return http(
+      `/events/${eventId}/invites/${inviteId}/revoke?sig=${encodeURIComponent(
+        sig
+      )}`,
+      { method: "PATCH" }
+    );
+  },
+
+  approveInvite(eventId: string, inviteId: string, sig: string) {
+    return http(
+      `/events/${eventId}/invites/${inviteId}/approve?sig=${encodeURIComponent(
+        sig
+      )}`,
+      { method: "PATCH" }
+    );
+  },
 };
