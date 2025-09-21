@@ -39,11 +39,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.ws.rs.OPTIONS;
 
-@Path("/ping")
-public class PingResource {
-  @GET public String ping() { return "pong"; }
-}
-
 @Path("/events")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
