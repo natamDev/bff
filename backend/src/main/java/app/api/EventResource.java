@@ -49,17 +49,6 @@ public class EventResource {
     @Inject
     LinkFactory links;
 
-    @OPTIONS
-    public Response optionsForEvents() {
-        return Response.noContent().build(); // 204
-    }
-
-    @OPTIONS
-    @Path("/{any: .*}")
-    public Response optionsForEventsSubpaths() {
-        return Response.noContent().build(); // 204
-    }
-
     @POST
     @Transactional
     @Operation(summary = "Create a new event")
