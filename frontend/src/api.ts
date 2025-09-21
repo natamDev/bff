@@ -7,15 +7,33 @@ function isValidObjectId(id: string): boolean {
 }
 
 async function http(path: string, opts: RequestInit = {}) {
+  const hasBody = !!(opts as any).body;
+  const headers = new Headers(opts.headers || {});
+  if (hasBody && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json"); // nécessaire pour POST/PATCH
+  }
+  // Pas de cookies -> évite CORS credentials
   const res = await fetch(API.base + path, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
+    method: opts.method || "GET",
+    mode: "cors",
+    credentials: "omit",
+    headers,
+    body: (opts as any).body,
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+
   if (res.status === 204) return null;
+  if (!res.ok) {
+    // Essaie de remonter un message d'erreur lisible
+    let msg: string;
+    try {
+      msg = (await res.text()) || `${res.status} ${res.statusText}`;
+    } catch {
+      msg = `${res.status} ${res.statusText}`;
+    }
+    throw new Error(`HTTP ${msg}`);
+  }
   return res.json();
 }
-
 export const EventApi = {
   create(payload: {
     title: string;
