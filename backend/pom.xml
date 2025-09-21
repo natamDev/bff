@@ -13,6 +13,7 @@
           <quarkus.platform.version>3.2.5.Final</quarkus.platform.version>
           <maven.compiler.source>17</maven.compiler.source>
           <maven.compiler.target>17</maven.compiler.target>
+          <quarkus.package.type>uber-jar</quarkus.package.type>
         </properties>
 
         <dependencyManagement>
