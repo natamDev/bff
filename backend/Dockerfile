@@ -4,15 +4,13 @@ WORKDIR /workspace
 COPY pom.xml .
 RUN mvn -q -B -DskipTests dependency:go-offline
 COPY src ./src
-RUN mvn -q -B -DskipTests package -Dquarkus.package.type=fast-jar
-
-# (debug)
-# RUN ls -la target && ls -la target/quarkus-app
+# build Quarkus => produit target/quarkus-app/ (fast-jar)
+RUN mvn -q -B -DskipTests quarkus:build
 
 # ---------- run ----------
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /workspace/target/quarkus-app/ /app/
+COPY --from=build /workspace/target/*-runner.jar /app/app.jar
 ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["java","-Dquarkus.http.host=0.0.0.0","-Dquarkus.http.port=${PORT}","-jar","/app/quarkus-run.jar"]
+ENTRYPOINT ["java","-Dquarkus.http.host=0.0.0.0","-Dquarkus.http.port=${PORT}","-jar","/app/app.jar"]
