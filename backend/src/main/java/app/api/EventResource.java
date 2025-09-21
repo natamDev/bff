@@ -50,17 +50,14 @@ public class EventResource {
     @Inject
     LinkFactory links;
 
-
-
-@OPTIONS
-public jakarta.ws.rs.core.Response optionsRoot() {
-  return jakarta.ws.rs.core.Response.noContent().build();
-}
-@OPTIONS @Path("{any: .*}")
-public jakarta.ws.rs.core.Response optionsAny() {
-  return jakarta.ws.rs.core.Response.noContent().build();
-}
-
+    @OPTIONS
+    public jakarta.ws.rs.core.Response optionsRoot() {
+    return jakarta.ws.rs.core.Response.noContent().build();
+    }
+    @OPTIONS @Path("{any: .*}")
+    public jakarta.ws.rs.core.Response optionsAny() {
+    return jakarta.ws.rs.core.Response.noContent().build();
+    }
 
     @POST
     @Transactional
