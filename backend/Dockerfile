@@ -4,12 +4,13 @@ WORKDIR /workspace
 COPY pom.xml .
 RUN mvn -q -B -DskipTests dependency:go-offline
 COPY src ./src
-# build Quarkus => produit target/quarkus-app/ (fast-jar)
-RUN mvn -q -B -DskipTests quarkus:build
+# respecte quarkus.package.type=uber-jar défini dans le POM
+RUN mvn -q -B -DskipTests package
 
 # ---------- run ----------
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+# le runner généré s’appelle *-runner.jar avec uber-jar
 COPY --from=build /workspace/target/*-runner.jar /app/app.jar
 
 ENV PORT=8080
