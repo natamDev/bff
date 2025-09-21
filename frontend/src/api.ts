@@ -135,4 +135,20 @@ export const EventApi = {
       { method: "PATCH" }
     );
   },
+  saveMyEvent(eventId: string, hostLink: string, sig: string) {
+    const events = JSON.parse(localStorage.getItem("myEvents") || "[]");
+    if (!events.find((e: any) => e.eventId === eventId)) {
+      events.push({ eventId, hostLink, sig });
+      localStorage.setItem("myEvents", JSON.stringify(events));
+    }
+  },
+  saveMyProno(eventId: string, inviteId: string, sig: string) {
+    const pronos = JSON.parse(localStorage.getItem("myPronos") || "[]");
+    if (
+      !pronos.find((p: any) => p.eventId === eventId && p.inviteId === inviteId)
+    ) {
+      pronos.push({ eventId, inviteId, sig });
+      localStorage.setItem("myPronos", JSON.stringify(pronos));
+    }
+  },
 };

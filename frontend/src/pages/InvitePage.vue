@@ -173,4 +173,12 @@ function resultLabel(b: any, event: any) {
 }
 
 onMounted(load);
+onMounted(() => {
+  const route = useRoute();
+  const eventId = route.params.eventId as string;
+  const inviteId = route.params.inviteId as string;
+  const sig = (route.query.sig as string) || "";
+
+  EventApi.saveMyProno(eventId, inviteId, sig);
+});
 </script>
