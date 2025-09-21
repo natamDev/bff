@@ -11,20 +11,19 @@
     </div>
     <div class="row">
       <div class="col">
-        <label
-          >Début<br /><input
-            v-model="startAt"
-            placeholder="2025-09-19T19:00:00+02:00"
-        /></label>
+        <label>
+          Début<br />
+          <input type="datetime-local" v-model="startAt" />
+        </label>
       </div>
       <div class="col">
-        <label
-          >Fin<br /><input
-            v-model="endAt"
-            placeholder="2025-09-19T20:00:00+02:00"
-        /></label>
+        <label>
+          Fin<br />
+          <input type="datetime-local" v-model="endAt" />
+        </label>
       </div>
     </div>
+
     <label
       >Description<br /><textarea v-model="description" rows="3"></textarea>
     </label>
