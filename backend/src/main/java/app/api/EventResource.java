@@ -31,7 +31,7 @@ import org.bson.types.ObjectId;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -159,12 +159,12 @@ public class EventResource {
         var existing = bet.predictions.stream().filter(p -> p.inviteId.equals(inviteId)).findFirst();
         if (existing.isPresent()) {
             existing.get().choice = choice;
-            existing.get().at = OffsetDateTime.now();
+            existing.get().at = Instant.now();
         } else {
             Event.Prediction p = new Event.Prediction();
             p.inviteId = inviteId;
             p.choice = choice;
-            p.at = OffsetDateTime.now();
+            p.at = Instant.now();
             bet.predictions.add(p);
         }
         repo.update(e);

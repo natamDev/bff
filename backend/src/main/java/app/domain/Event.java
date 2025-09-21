@@ -1,10 +1,9 @@
 package app.domain;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.bson.types.ObjectId;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,35 +13,14 @@ public class Event {
     public String title;
     public String description;
     public String place;
-    @BsonProperty("startAt")
-    public OffsetDateTime startAt;
-    @BsonProperty("endAt")
-    public OffsetDateTime endAt;
+    public Instant startAt;
+    public Instant endAt;
     public String hostSecret;
     public boolean closed = false;
 
     public List<Invite> invites = new ArrayList<>();
     public List<Bet> bets = new ArrayList<>();
 
-    @BsonProperty("startAt")
-    public String getStartAt() {
-        return startAt != null ? startAt.toString() : null;
-    }
-
-    @BsonProperty("startAt")
-    public void setStartAt(String startAt) {
-        this.startAt = startAt != null ? OffsetDateTime.parse(startAt) : null;
-    }
-
-    @BsonProperty("endAt")
-    public String getEndAt() {
-        return endAt != null ? endAt.toString() : null;
-    }
-
-    @BsonProperty("endAt")
-    public void setEndAt(String endAt) {
-        this.endAt = endAt != null ? OffsetDateTime.parse(endAt) : null;
-    }
 
     public static class Invite {
         public String id;
@@ -62,19 +40,8 @@ public class Event {
     public static class Prediction {
         public String inviteId;
         public Choice choice;
-        @BsonProperty("at")
-        public OffsetDateTime at;
+        public Instant at; // juste le champ public, Panache gère ça
 
         public enum Choice {YES, NO}
-
-         @BsonProperty("at")
-        public String getAt() {
-            return at != null ? at.toString() : null;
-        }
-
-        @BsonProperty("at")
-        public void setAt(String at) {
-            this.at = at != null ? OffsetDateTime.parse(at) : null;
-        }
     }
 }
