@@ -135,42 +135,33 @@
         <button @click="addInvite" :disabled="!newInvite">Ajouter</button>
       </div>
     </div>
+
     <div class="sep"></div>
     <div class="card">
       <h3>Liens invités</h3>
-      <div class="row">
-        <div v-for="i in inviteLinks" :key="i.id">
-          <div
-            class="row"
-            style="
-              justify-content: space-between;
-              align-items: center;
-              gap: 12px;
-            "
+      <div class="list">
+        <div
+          v-for="i in inviteLinks"
+          :key="i.id"
+          class="row"
+          style="align-items: center; justify-content: space-between"
+        >
+          <b>{{ i.name }}</b>
+          <button
+            :class="{ ghost: i.revoked }"
+            :disabled="i.revoked"
+            @click="shareInvite(i)"
           >
-            <!-- Colonne 1 : Nom -->
-            <div style="flex: 1">
-              <b>{{ i.name }}</b>
-            </div>
+            🔗 Partager
+          </button>
 
-            <!-- Colonne 2 : Lien -->
-            <div style="flex: 2">
-              <a v-if="i.url" :href="i.url" target="_blank">{{ i.url }}</a>
-              <span v-else class="muted">Lien désactivé</span>
-            </div>
-
-            <!-- Colonne 3 : Action -->
-            <div style="flex: 1; text-align: right">
-              <button v-if="!i.revoked" class="danger" @click="revokeInvite(i)">
-                🚫 Révoquer
-              </button>
-              <button v-else @click="approveInvite(i)">✅ Approuver</button>
-            </div>
-          </div>
+          <button v-if="!i.revoked" class="danger" @click="revokeInvite(i)">
+            🚫 Révoquer
+          </button>
+          <button v-else @click="approveInvite(i)">✅ Approuver</button>
         </div>
       </div>
     </div>
-
     <div class="sep"></div>
 
     <div class="card">
@@ -397,5 +388,23 @@ function parseInviteUrl(rawUrl: string) {
   return { eventId, inviteId, sig };
 }
 
+async function shareInvite(i: { url: string; name: string }) {
+  if (!i.url) return;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Invitation pour ${i.name}`,
+        url: i.url,
+      });
+    } catch (e) {
+      console.log("Partager annulé", e);
+    }
+  } else {
+    // fallback copie dans le presse-papier
+    await navigator.clipboard.writeText(i.url);
+    alert("Lien copié dans le presse-papier !");
+  }
+}
 onMounted(refresh);
 </script>

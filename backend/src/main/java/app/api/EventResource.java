@@ -177,6 +177,13 @@ public class EventResource {
         Event e = repo.byId(new ObjectId(eventId));
         if (e == null) throw new NotFoundException();
         if (!links.verifyInvite(eventId, sig, inviteId)) throw new ForbiddenException();
+         var invite = e.invites.stream()
+            .filter(i -> i.id.equals(inviteId))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("invite not found"));
+        if (invite.revoked) {
+            throw new ForbiddenException("invite revoked");
+        }
         var bet = e.bets.stream().filter(b -> b.id.equals(betId)).findFirst().orElseThrow(() -> new NotFoundException("bet not found"));
         if (bet.status != Event.Bet.Status.open) throw new BadRequestException("bet closed");
         var choice = switch (req.choice) {
