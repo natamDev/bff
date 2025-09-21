@@ -28,6 +28,8 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 @Path("/events")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Event", description = "Manage events and bets")
 public class EventResource {
 
     @Inject
@@ -48,6 +51,7 @@ public class EventResource {
 
     @POST
     @Transactional
+    @Operation(summary = "Create a new event")
     public Response create(EventCreateReq req) {
         Log.info("Create event");
         if (req.title == null || req.title.isBlank()) throw new BadRequestException("title required");
