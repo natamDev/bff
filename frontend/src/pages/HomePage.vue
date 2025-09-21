@@ -1,7 +1,7 @@
 <template>
   <div class="card">
     <h2>🏠 Accueil</h2>
-
+    <InstallPwaButton />
     <div class="sep"></div>
     <h3>📅 Mes événements</h3>
     <div v-if="myEvents.length">
@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="ts">
+import InstallPwaButton from "../components/InstallPwaButton.vue";
 import { ref, onMounted } from "vue";
 import { EventApi } from "../api";
 
