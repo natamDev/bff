@@ -3,7 +3,6 @@ package app.domain;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.types.ObjectId;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +12,8 @@ public class Event {
     public String title;
     public String description;
     public String place;
-    public Instant startAt;
-    public Instant endAt;
+    public String startAt;
+    public String endAt;
     public String hostSecret;
     public boolean closed = false;
 
@@ -40,7 +39,7 @@ public class Event {
     public static class Prediction {
         public String inviteId;
         public Choice choice;
-        public Instant at; // juste le champ public, Panache gère ça
+        public String at; 
 
         public enum Choice {YES, NO}
     }

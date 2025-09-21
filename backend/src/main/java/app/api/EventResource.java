@@ -159,12 +159,12 @@ public class EventResource {
         var existing = bet.predictions.stream().filter(p -> p.inviteId.equals(inviteId)).findFirst();
         if (existing.isPresent()) {
             existing.get().choice = choice;
-            existing.get().at = Instant.now();
+            existing.get().at = Instant.now().toString();
         } else {
             Event.Prediction p = new Event.Prediction();
             p.inviteId = inviteId;
             p.choice = choice;
-            p.at = Instant.now();
+            p.at = Instant.now().toString();
             bet.predictions.add(p);
         }
         repo.update(e);
