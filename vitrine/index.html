@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BetWave — Pariez entre amis, simplement</title>
+  <meta name="description" content="Créez des événements, ajoutez des paris 100% personnalisés et partagez des liens uniques à vos amis. Sans compte, sans prise de tête.">
+  <meta property="og:title" content="BetWave — Pariez entre amis, simplement">
+  <meta property="og:description" content="Créez des événements, ajoutez des paris personnalisés et validez les résultats en un clic.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/og.png">
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hdr">
+  <div class="container nav">
+    <a class="logo" href="#"><img src="assets/logo.svg" alt="BetWave" width="28" height="28"><span>BetWave</span></a>
+    <nav id="menu" class="menu">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#how">Comment ça marche</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn sm ghost" href="#demo">Demo</a>
+    </nav>
+    <button class="burger" aria-label="Menu" onclick="toggleMenu()">☰</button>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="badge">MVP gratuit • Sans compte invité</div>
+        <h1>Pariez entre amis,<br><span class="accent">sans friction.</span></h1>
+        <p class="lead">Créez un événement, ajoutez vos paris personnalisés (<b>oui/non</b>) et partagez des <b>liens uniques</b> à vos invités. L’hôte clôture, tout le monde voit le résultat.</p>
+        <div class="cta">
+          <a class="btn primary" href="#demo">Essayer maintenant</a>
+          <a class="btn ghost" href="#how">Voir comment</a>
+        </div>
+        <ul class="ticks">
+          <li>Liens sécurisés (signature HMAC)</li>
+          <li>Vue 3 + Quarkus + Mongo</li>
+          <li>Responsive, rapide et propre</li>
+        </ul>
+      </div>
+      <div class="hero-shot card shadow fadein">
+        <img src="assets/hero-illustration.svg" alt="Aperçu BetWave">
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="logos">
+    <div class="container logos-row">
+      <span class="muted">Fonctionne pour :</span>
+      <div class="chips">
+        <span class="chip">Matchs 5v5</span>
+        <span class="chip">Anniversaires</span>
+        <span class="chip">Soirées entre potes</span>
+        <span class="chip">Défis fun</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="section">
+    <div class="container">
+      <h2>Ce que tu peux faire</h2>
+      <p class="sub">Tout ce qu’il faut pour un pari entre amis… et rien de plus.</p>
+      <div class="grid">
+        <article class="card feat fadein">
+          <div class="icon">🎯</div>
+          <h3>Paris sur-mesure</h3>
+          <p>Tu écris le pari que tu veux : “A1 marque dans les 10min”, “Gérard boit 5 ricard”…</p>
+        </article>
+        <article class="card feat fadein">
+          <div class="icon">🔗</div>
+          <h3>Liens uniques par invité</h3>
+          <p>Pas de compte : chaque invité a son lien perso pour pronostiquer en 2 clics.</p>
+        </article>
+        <article class="card feat fadein">
+          <div class="icon">🧾</div>
+          <h3>Tableau récap en live</h3>
+          <p>Une matrice claire des réponses (oui/non) par invité, mise à jour au fil de l’événement.</p>
+        </article>
+        <article class="card feat fadein">
+          <div class="icon">✅</div>
+          <h3>Validation en un clic</h3>
+          <p>L’hôte marque chaque pari en <b>vrai</b> ou <b>faux</b>. Les résultats s’affichent pour tout le monde.</p>
+        </article>
+        <article class="card feat fadein">
+          <div class="icon">🛡️</div>
+          <h3>Signature des liens</h3>
+          <p>Les liens sont signés (HMAC) pour éviter les bidouilles. Simple et efficace.</p>
+        </article>
+        <article class="card feat fadein">
+          <div class="icon">⚡</div>
+          <h3>Ultra rapide</h3>
+          <p>Front en Vite + Vue, API Quarkus, base Mongo. Démarre et itère en un instant.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="section alt">
+    <div class="container">
+      <h2>Comment ça marche</h2>
+      <div class="steps">
+        <div class="step fadein"><span class="bubble">1</span><div><b>Crée</b> un événement (titre, lieu, description, invités).</div></div>
+        <div class="step fadein"><span class="bubble">2</span><div><b>Ajoute</b> tes paris (oui/non) — autant que tu veux.</div></div>
+        <div class="step fadein"><span class="bubble">3</span><div><b>Partage</b> le lien hôte + les liens invités.</div></div>
+        <div class="step fadein"><span class="bubble">4</span><div><b>Clôture</b> et marque chaque pari en vrai/faux.</div></div>
+      </div>
+      <div class="shots">
+        <img class="card" src="assets/mock-host.png" alt="Interface hôte">
+        <img class="card" src="assets/mock-invite.png" alt="Interface invité">
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="demo" class="section">
+    <div class="container demo">
+      <div class="copy">
+        <h2>Teste la démo</h2>
+        <p>Un flux simple : création → partage → pronos → validation. Le tout, sans comptes invités.</p>
+        <a class="btn primary" href="#" onclick="alert('Brancher votre URL app plus tard');return false;">Lancer la démo</a>
+      </div>
+      <img class="card shadow" src="assets/mock-pari.png" alt="Aperçu pari">
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section alt">
+    <div class="container">
+      <h2>FAQ</h2>
+      <details class="fadein">
+        <summary>Y a-t-il des mises ou des cotes ?</summary>
+        <p>Non. Les paris sont vrais/faux, sans mise. Parfait pour un MVP et des soirées entre amis.</p>
+      </details>
+      <details class="fadein">
+        <summary>Les invités doivent-ils créer un compte ?</summary>
+        <p>Non. Ils reçoivent un lien unique, suffisant pour pronostiquer.</p>
+      </details>
+      <details class="fadein">
+        <summary>Comment voyez-vous les scores ?</summary>
+        <p>La page hôte affiche une matrice des réponses par invité, et un label gagné/perdu par pari.</p>
+      </details>
+      <details class="fadein">
+        <summary>Est-ce gratuit ?</summary>
+        <p>Oui pour démarrer. Hébergement simple (VPS/OVH ou Netlify/Vercel pour le vitrine).</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="ftr">
+  <div class="container ftr-grid">
+    <div>
+      <div class="logo l2"><img src="assets/logo.svg" alt="BetWave" width="24" height="24"><span>BetWave</span></div>
+      <p class="muted">© 2025 — Tous droits réservés.</p>
+    </div>
+    <div class="links">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#how">Comment</a>
+      <a href="#faq">FAQ</a>
+      <a href="#" class="btn sm ghost">Nous contacter</a>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
