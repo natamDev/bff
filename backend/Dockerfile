@@ -1,16 +1,19 @@
 # ---------- build ----------
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
+
+# pas de cache: on copie tout et on build
 COPY pom.xml .
-RUN mvn -q -B -DskipTests dependency:go-offline
 COPY src ./src
-# respecte quarkus.package.type=uber-jar défini dans le POM
-RUN mvn -q -B -DskipTests package
+
+# FORCE le packaging Quarkus en uber-jar (produit *-runner.jar)
+RUN mvn -q -B -DskipTests -Dquarkus.package.jar.type=uber-jar quarkus:build
 
 # ---------- run ----------
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-# le runner généré s’appelle *-runner.jar avec uber-jar
+
+# copie uniquement le runner jar
 COPY --from=build /workspace/target/*-runner.jar /app/app.jar
 
 ENV PORT=8080
