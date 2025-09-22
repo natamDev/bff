@@ -19,3 +19,10 @@ const router = createRouter({
 });
 
 createApp(App).use(createPinia()).use(router).mount("#app");
+
+// Enregistrement du service worker PWA (ne casse pas le site si pas dispo)
+if ("serviceWorker" in navigator) {
+  import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
