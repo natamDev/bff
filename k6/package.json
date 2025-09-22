@@ -1,0 +1,15 @@
+{
+  "name": "betforfriend-perf",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-events.js",
+    "load": "k6 run load-test.js",
+    "load:json": "bash -c \"[ -d reports ] || mkdir reports; k6 run load-test.js --summary-export=reports/$(date +%F_%H-%M-%S).json\"",
+    "load:html": "bash -c \"[ -d reports ] || mkdir reports; k6 run load-test.js --summary-export=reports/summary.json && k6-to-html reports/summary.json > reports/result.html\"",
+    "user": "k6 run user-journey.js"
+  },
+  "dependencies": {
+    "bson": "^6.8.0"
+  }
+}
