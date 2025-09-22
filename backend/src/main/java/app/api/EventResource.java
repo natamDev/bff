@@ -325,6 +325,57 @@ public class EventResource {
         return rows;
     }
 
+    @GET
+    @Path("/{eventId}/predictions/scores")
+    public List<ScoreRow> scores(@PathParam("eventId") String eventId, @QueryParam("sig") String sig) {
+        Event e = repo.byId(new ObjectId(eventId));
+        if (e == null) throw new NotFoundException();
+        if (!links.verifyHost(eventId, sig, e.hostSecret)) throw new ForbiddenException();
+
+        // Map inviteId -> nom
+        Map<String, String> names = e.invites.stream()
+            .collect(Collectors.toMap(i -> i.id, i -> i.name));
+
+        // Initialiser scores
+        Map<String, Integer> scoreMap = new LinkedHashMap<>();
+        for (Event.Invite i : e.invites) {
+            scoreMap.put(i.id, 0);
+        }
+
+        // Parcourir les bets
+        for (Event.Bet b : e.bets) {
+            if (b.status == Event.Bet.Status.open) continue; // pas encore résolu
+
+            for (Event.Prediction p : b.predictions) {
+                boolean won = (p.choice == Event.Prediction.Choice.YES && b.status == Event.Bet.Status._true)
+                        || (p.choice == Event.Prediction.Choice.NO && b.status == Event.Bet.Status._false);
+                if (won) {
+                    scoreMap.computeIfPresent(p.inviteId, (k, v) -> v + 1);
+                }
+            }
+        }
+
+        // Transformer en liste
+        List<ScoreRow> scores = scoreMap.entrySet().stream()
+            .map(ei -> {
+                ScoreRow row = new ScoreRow();
+                row.inviteId = ei.getKey();
+                row.name = names.getOrDefault(ei.getKey(), ei.getKey());
+                row.score = ei.getValue();
+                return row;
+            })
+            .sorted((a, b) -> Integer.compare(b.score, a.score)) // tri descendant
+            .toList();
+
+        return scores;
+    }
+
+    public static class ScoreRow {
+        public String inviteId;
+        public String name;
+        public int score;
+    }
+
     @POST
     @Path("/{eventId}/close")
     @Transactional

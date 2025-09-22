@@ -196,6 +196,25 @@
       <p v-else class="muted">Aucun pronostic pour l’instant.</p>
     </div>
 
+    <div class="card">
+      <h3>
+        Classement des invités
+        <button class="ghost" @click="refreshScores">Rafraîchir</button>
+      </h3>
+      <div v-if="scores.length" class="list">
+        <div
+          v-for="s in scores"
+          :key="s.inviteId"
+          class="row"
+          style="justify-content: space-between; padding: 8px 0"
+        >
+          <b>{{ s.name }}</b>
+          <span>{{ s.score }} point{{ s.score > 1 ? "s" : "" }}</span>
+        </div>
+      </div>
+      <p v-else class="muted">Aucun score calculé pour l’instant.</p>
+    </div>
+
     <p v-if="error" style="color: #fca5a5">{{ error }}</p>
   </div>
   <div v-else class="card">Chargement…</div>
@@ -214,12 +233,14 @@ const inviteLinks = ref<Record<string, string>>({});
 const newBet = ref("");
 const error = ref("");
 const matrix = ref<any[]>([]);
+const scores = ref<any[]>([]);
 
 async function refresh() {
   try {
     event.value = await EventApi.get(eventId);
     inviteLinks.value = await EventApi.listInviteLinks(eventId, sig);
     matrix.value = await EventApi.matrix(eventId, sig);
+    scores.value = await EventApi.scores(eventId, sig);
   } catch (e: any) {
     error.value = e.message;
   }
@@ -228,6 +249,14 @@ async function refresh() {
 async function refreshMatrix() {
   try {
     matrix.value = await EventApi.matrix(eventId, sig);
+  } catch (e: any) {
+    error.value = e.message;
+  }
+}
+
+async function refreshScores() {
+  try {
+    scores.value = await EventApi.scores(eventId, sig);
   } catch (e: any) {
     error.value = e.message;
   }

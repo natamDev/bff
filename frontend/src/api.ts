@@ -105,6 +105,11 @@ export const EventApi = {
       `/events/${eventId}/predictions/matrix?sig=${encodeURIComponent(sig)}`
     );
   },
+  scores(eventId: string, sig: string) {
+    return http(
+      `/events/${eventId}/predictions/scores?sig=${encodeURIComponent(sig)}`
+    );
+  },
   deleteBet(eventId: string, betId: string, sig: string) {
     return http(
       `/events/${eventId}/bets/${betId}?sig=${encodeURIComponent(sig)}`,
